@@ -104,3 +104,175 @@ class TestProductModel(unittest.TestCase):
     #
     # ADD YOUR TEST CASES HERE
     #
+
+    def test_read_product(self):
+        """It should read a product"""
+        product = ProductFactory()
+        logging.debug("Reading product %s", product.name)
+        product.id = None
+        product.create()
+        self.assertIsNotNone(product.id)
+        product_found = Product.find(product.id)
+
+        self.assertEqual(product_found.id, product.id)
+        self.assertEqual(product_found.name, product.name)
+        self.assertEqual(product_found.category, product.category)
+        self.assertEqual(product_found.description, product.description)
+        self.assertEqual(product_found.price, product.price)
+
+    def test_update_product(self):
+        """It should update a product"""
+
+        product = ProductFactory()
+        logging.debug("Reading product %s ", product.name)
+        product.id = None
+        product.create()
+        self.assertIsNotNone(product.id)
+        logging.debug("Reading product again %s ", product.name)
+
+        product.description = "New description of product"
+        old_id = product.id
+        product.update()
+        logging.debug("Updated product to description %s ",  product.description)
+
+        self.assertEqual(product.id, old_id)
+        self.assertEqual(product.description, "New description of product")
+
+        products = Product.all()
+        self.assertEqual(len(products), 1)
+        self.assertEqual(products[0].id, old_id)
+        self.assertEqual(products[0].description, "New description of product")
+
+    def test_delete_product(self):
+        """It should delete a product"""
+
+        # create product
+        product = ProductFactory()
+        product.id = None
+        product.create()
+        self.assertIsNotNone(product.id)
+
+        # assert only one product present
+        products = Product.all()
+        self.assertEqual(len(products), 1)
+
+        # delete product
+        logging.debug("Deleting product {product.name}")
+        product.delete()
+        products = Product.all()
+        self.assertEqual(len(products), 0)
+
+    def test_list_all_products(self):
+        """It should list all products"""
+
+        # make sure no products exist yet
+        products = Product.all()
+        logging.debug("Length of products %s ", len(products))
+        self.assertEqual(products, [])
+
+        # create 5 products
+        for _ in range(5):
+            new_product = ProductFactory()
+            new_product.create()
+        logging.debug("Length of products %s ", len(Product.all()))
+        self.assertEqual(5, len(Product.all()))
+
+    def test_find_product_by_name(self):
+        """It should find a product by name"""
+        # create 5 products
+        products = ProductFactory.create_batch(5)
+
+        for product in products:
+            product.create()
+
+        # retrive all 5 products
+        products_name = products[0].name
+
+        # get counts
+        count = len([product for product in products if product.name == products_name])
+        # assert
+        found = Product.find_by_name(products_name)
+        logging.debug("Product found: %s ", found)
+        self.assertEqual(count, found.count())
+        for product in found:
+            self.assertEqual(product.name, products_name)
+
+    def test_find_product_by_category(self):
+        """It should find a product by category"""
+        products = ProductFactory.create_batch(10)
+        for product in products:
+            product.create()
+
+        first_product_category = products[0].category
+
+        count = len([product for product in products if product.category == first_product_category])
+
+        found_products_cat = Product.find_by_category(first_product_category)
+
+        self.assertEqual(found_products_cat.count(), count)
+        for product in found_products_cat:
+            self.assertEqual(product.category, first_product_category)
+
+    def test_find_product_by_availability(self):
+        """It should find a product by availability"""
+
+        products = ProductFactory.create_batch(10)
+        for product in products:
+            product.create()
+
+        first_product_availability = products[0].available
+
+        count = len([product for product in products if product.available == first_product_availability])
+
+        found_products_avail = Product.find_by_availability(first_product_availability)
+
+        self.assertEqual(found_products_avail.count(), count)
+        for product in found_products_avail:
+            self.assertEqual(product.available, first_product_availability)
+
+    def test_find_product_by_price(self):
+        """It should find a product by price"""
+
+        products = ProductFactory.create_batch(10)
+        for product in products:
+            product.create()
+
+        first_product_price = products[0].price
+
+        count = len([product for product in products if product.price == first_product_price])
+
+        found_products_price = Product.find_by_price(first_product_price)
+
+        self.assertEqual(found_products_price.count(), count)
+        for product in found_products_price:
+            self.assertEqual(product.price, first_product_price)
+
+    def test_find_product_by_id(self):
+        """It should find a product by id"""
+
+        products = ProductFactory.create_batch(10)
+        for product in products:
+            product.create()
+
+        first_product_id = products[0].id
+
+        found_products_id = Product.find(first_product_id).id
+
+        self.assertEqual(found_products_id, Product.all()[0].id)
+
+    def test_serialize_product(self):
+        """It should serialize product to dict"""
+        product = ProductFactory()
+        product.create()
+        self.assertIsNotNone(product.id)
+
+        dict_product = product.serialize()
+        self.assertIsInstance(dict_product, dict)
+
+    def test_repr(self):
+        """It should print magic fnctn"""
+        product = ProductFactory()
+        product.create()
+        self.assertIsNotNone(product.id)
+
+        self.assertEqual(str(product), f"<Product {product.name} id=[{product.id}]>")
